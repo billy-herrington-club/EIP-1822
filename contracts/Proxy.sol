@@ -1,19 +1,23 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.15;
+pragma solidity 0.8.16;
 
 contract Proxy {
+    //Pseudo-random slot to store implementation
     bytes32 internal constant _IMPLEMENTATION_SLOT =
         0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc;
-  //0x8129fc1c
-    constructor(bytes memory constructData, address implementation) {
+
+    /// @dev Sets implementation, admin, and initializes implementation
+    constructor(address _implementation, bytes memory _data) {
         assembly {
-            sstore(_IMPLEMENTATION_SLOT, implementation)
+            sstore(_IMPLEMENTATION_SLOT, _implementation)
         }
-        (bool success, ) = implementation.delegatecall(constructData);
+        (bool success, ) = _implementation.delegatecall(_data);
         require(success, "Unsuccessful construct");
     }
 
+     /// @dev Fallback function that performs delegatecall to the contract that was loaded from
+    /// implementation slot
     fallback() external payable {
         assembly {
             let implementation := sload(_IMPLEMENTATION_SLOT)
